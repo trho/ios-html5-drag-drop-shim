@@ -34,6 +34,7 @@
 
   function DragDrop(event, el) {
 
+    this.hasMoved = false;
     this.dragData = {};
     this.dragDataTypes = [];
     this.dragImage = null;
@@ -81,6 +82,7 @@
       }
     },
     move: function(event) {
+      this.hasMoved = true;
       event.preventDefault();
       var pageXs = [], pageYs = [];
       [].forEach.call(event.changedTouches, function(touch) {
@@ -131,8 +133,16 @@
         this.dispatchLeave(event);
       }
 
+      if (!this.hasMoved) {
+        var clickEvt = document.createEvent("MouseEvents");
+          clickEvt.initMouseEvent("click", true, true, this.el.ownerDocument.defaultView, 1,
+            event.screenX, event.screenY, event.clientX, event.clientY,
+            event.ctrlKey, event.altKey, event.shiftKey, event.metaKey, 0, null);
+          this.el.dispatchEvent(clickEvt);
+      }
+
       var target = elementFromTouchEvent(this.el,event)
-      if (target) {
+        if (target && this.hasMoved) {
         log("found drop target " + target.tagName);
         this.dispatchDrop(target, event);
       } else {
@@ -254,10 +264,10 @@
     createDragImage: function() {
       if (this.customDragImage) {
         this.dragImage = this.customDragImage.cloneNode(true);
-        duplicateStyle(this.customDragImage, this.dragImage); 
+        duplicateStyle(this.customDragImage, this.dragImage);
       } else {
         this.dragImage = this.el.cloneNode(true);
-        duplicateStyle(this.el, this.dragImage); 
+        duplicateStyle(this.el, this.dragImage);
       }
       this.dragImage.style.opacity = "0.5";
       this.dragImage.style.position = "absolute";
